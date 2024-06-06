@@ -8,6 +8,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 type CommentInfo struct {
@@ -36,6 +37,7 @@ type VideoInfo struct {
 }
 
 var REGEXP_SUBTITLE_TEXT = regexp.MustCompile("<font.*>(.*)</font>")
+var REGEXP_ID_FROM_URL = regexp.MustCompile("\\/watch\\?v=(.*)\\/?")
 
 func getUrlsFromPlaylist(url string) ([]string, error) {
 	result := []string {}
@@ -66,7 +68,7 @@ func getUrlsFromPlaylist(url string) ([]string, error) {
 	}
 
 	for _, entry := range playlistInfo.Entries {
-		if (entry.Title != "[Private Video]") {
+		if (entry.Title != "[Private video]") {
 			result = append(result, entry.Url)
 		}
 	}
@@ -75,6 +77,8 @@ func getUrlsFromPlaylist(url string) ([]string, error) {
 }
 
 func getSubtitleFile(tempDir string, url string) (string, error) {
+	filename := REGEXP_ID_FROM_URL.FindStringSubmatch(url)[1]
+
 	cmd := exec.Command(
 		"yt-dlp",
 		"--write-subs",
@@ -83,7 +87,7 @@ func getSubtitleFile(tempDir string, url string) (string, error) {
 		"--sub-langs", "de",
 		"--sub-format", "ttml",
 		"--convert-subs", "srt",
-		"--output", path.Join(tempDir, "subs"),
+		"--output", path.Join(tempDir, filename),
 		url,
 	)
 
@@ -91,7 +95,7 @@ func getSubtitleFile(tempDir string, url string) (string, error) {
 		return "", err
 	}
 
-	return path.Join(tempDir, "subs.de.srt"), nil
+	return path.Join(tempDir, filename + ".de.srt"), nil
 }
 
 func convertSubtitleFile(subtitlePath string) (string, error) {
@@ -112,7 +116,21 @@ func convertSubtitleFile(subtitlePath string) (string, error) {
 	return strings.Join(result, "\n"), nil
 }
 
-func getInfoStruct(url string) (*VideoInfo, error) {
+func getSubtitles(url string, temporyDirectory string) (string, error) {
+	subtitleFile, err := getSubtitleFile(temporyDirectory, url)
+	if (err != nil) {
+		return "", err
+	}
+
+	subtitle, err := convertSubtitleFile(subtitleFile)
+	if (err != nil) {
+		return "", err
+	}
+
+	return subtitle, nil
+}
+
+func getInfoStruct(url string, tempDir string) (*VideoInfo, error) {
 	command := exec.Command(
 		"yt-dlp",
 		"--dump-single-json",
@@ -130,6 +148,13 @@ func getInfoStruct(url string) (*VideoInfo, error) {
 		return nil, err
 	}
 
+	subtitles, err := getSubtitles(url, tempDir)
+	if err != nil {
+		return nil, err
+	}
+
+	info.Transcript = subtitles
+
 	return info, nil
 }
 
@@ -142,41 +167,46 @@ func main() {
 		os.Exit(1);
 	}
 
-	infos := []VideoInfo {}
-
-	for i, url := range urls {
-		fmt.Printf("%d/%d\n", i + 1, len(urls))
-
-		temporyDirectory, err := os.MkdirTemp("", "bild-scraper")
-		if (err != nil) {
-			fmt.Println("could not create temporary directory")
-			fmt.Println(err)
-			os.Exit(1);
-		}
-
-		defer os.RemoveAll(temporyDirectory);
-		subtitleFile, err := getSubtitleFile(temporyDirectory, url)
-		if (err != nil) {
-			fmt.Println("could not fetch subtitle file")
-			fmt.Println(err)
-			os.Exit(2)
-		}
-
-		subtitle, err := convertSubtitleFile(subtitleFile)
-		if (err != nil) {
-			fmt.Println("could not parse subtitle file")
-			fmt.Println(err)
-			os.Exit(2)
-		}
-
-		info, err := getInfoStruct(url)
-		if (err != nil) {
-			fmt.Println("could not get info struct")
-			fmt.Println(err)
-			os.Exit(3)
-		}
-
-		info.Transcript = subtitle
-		infos = append(infos, *info)
+	type AtomicInfos struct {
+		Infos []VideoInfo
+		Mutex sync.Mutex
 	}
+
+	waitGroup := sync.WaitGroup{}
+	infos := AtomicInfos{
+		Infos: []VideoInfo{},
+		Mutex: sync.Mutex{},
+	}
+
+	temporyDirectory, err := os.MkdirTemp("", "bild-scraper")
+	if (err != nil) {
+		fmt.Println("could not create temporary directory")
+		fmt.Println(err)
+		os.Exit(2);
+	}
+
+	defer os.RemoveAll(temporyDirectory);
+
+	for _, url := range urls {
+		waitGroup.Add(1)
+
+		go func(url string) {
+			defer waitGroup.Done()
+			info, err := getInfoStruct(url, temporyDirectory)
+
+			if (err != nil) {
+				fmt.Println("could not get info struct")
+				fmt.Println(err)
+				return
+			}
+
+			infos.Mutex.Lock()
+			infos.Infos = append(infos.Infos, *info)
+			fmt.Printf("%d/%d\n", len(infos.Infos), len(urls))
+			infos.Mutex.Unlock()
+		}(url)
+	}
+
+	waitGroup.Wait()
+	fmt.Println(infos.Infos)
 }
