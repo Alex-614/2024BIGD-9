@@ -4,7 +4,7 @@
   "description": "Projekt Repository Gruppe 9 BigData SoSe 2024 TH Bingen",
   "main": "database.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node service.js"
   },
   "author": "",
   "license": "ISC"
