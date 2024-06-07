@@ -3,8 +3,8 @@ WORKDIR /root
 
 COPY package*.json ./
 
-RUN npm clean-install
- 
-COPY service.js main.js
- 
+RUN npm install
+
+COPY service.js service.js
+
 CMD [ "node", "service.js" ]
