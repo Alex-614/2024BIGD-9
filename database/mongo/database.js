@@ -8,7 +8,7 @@ db.createUser(
              { role: "dbAdminAnyDatabase", db: "admin" }, 
              { role: "readWriteAnyDatabase", db: "admin" } ]
   }
-)
+);
 
 db.createCollection("news", {
   validator: {
