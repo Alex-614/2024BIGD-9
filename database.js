@@ -4,11 +4,11 @@ db.createCollection("news", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["url", "title", "source", "createdAt", "commentsEnabled", "commentCount", "tags", "videoLength", "views", "subscribers", "timestamp", "transcript"],
+      required: ["id", "title", "channelId", "createdAt", "commentsEnabled", "commentCount", "categories", "tags", "videoLength", "views", "likeCount", "subscribers", "timestamp", "transcript"],
       properties: {
-        url: {
+        id: {
           bsonType: "string",
-          description: "URL of the video"
+          description: "Id of the video"
         },
         title: {
           bsonType: "array",
@@ -27,7 +27,7 @@ db.createCollection("news", {
             }
           }
         },
-        source: {
+        channelId: {
           bsonType: "string",
           description: "From which Newsoutlet the news was pulled"
         },
@@ -69,6 +69,23 @@ db.createCollection("news", {
             }
           }
         },
+        categories: {
+          bsonType: "array",
+          description: "Array of categories + timestamp",
+          items: {
+            bsonType: "object",
+            properties: {
+              categories: {
+                bsonType: "array",
+                description: "Categories from the video"
+              },
+              timestamp: {
+                bsonType: "date",
+                description: "Timestamp of the categories"
+              }
+            }
+          }
+        },
         tags: {
           bsonType: "array",
           description: "Array of tags + timestamp",
@@ -76,7 +93,7 @@ db.createCollection("news", {
             bsonType: "object",
             properties: {
               tags: {
-                bsonType: ["array"],
+                bsonType: "array",
                 description: "Tags from the video"
               },
               timestamp: {
@@ -116,6 +133,23 @@ db.createCollection("news", {
               timestamp: {
                 bsonType: "date",
                 description: "Timestamp of the views"
+              }
+            }
+          }
+        },
+        likeCount: {
+          bsonType: "array",
+          description: "Array of likeCount + timestamp",
+          items: {
+            bsonType: "object",
+            properties: {
+              likeCount: {
+                bsonType: "int",
+                description: "Number of likes"
+              },
+              timestamp: {
+                bsonType: "date",
+                description: "Timestamp of the likeCount"
               }
             }
           }
@@ -161,6 +195,6 @@ db.createCollection("news", {
       }
     }
   }
-})
+}),
 
-db.news.createIndex({ "url": 1 }, { unique: true })
+db.news.createIndex({ "id": 1 }, { unique: true })
