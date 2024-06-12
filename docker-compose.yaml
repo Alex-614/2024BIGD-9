@@ -19,27 +19,30 @@ services:
     ports:
       - 27017:27017
     healthcheck:
-      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@localhost:${DB_PORT}/?authSource=${MONGO_INITDB_DATABASE} --quiet"]
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://$$MONGO_INITDB_ROOT_USERNAME:$$MONGO_INITDB_ROOT_PASSWORD@localhost:$$DB_PORT/?authSource=$$MONGO_INITDB_DATABASE --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
       start_interval: 5s
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_USERNAME: bigdadmin
       MONGO_INITDB_ROOT_PASSWORD: admin
       DB_PORT: 27017
       MONGO_INITDB_DATABASE: BigDNews
+      
 
   bigdnews-service:
     container_name: bigdnews-service
     hostname: bigdnews-service
+    networks:
+      - bigdnews
     build:
       context: ./webservice
       dockerfile: Dockerfile
     image: bigdnews-service
-    volumes:
-      - ./service:/usr/app/
+    #volumes:
+      #- ./service:/usr/app/
       #- /usr/app/node_modules
     ports:
       - "3000:3000"
@@ -49,6 +52,7 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: mongodb://127.0.0.1:27017/BigDNews
+      NPM_TOKEN: 00000000-0000-0000-0000-000000000000
 
   # bigdnews scraper
   bigdnews-scraper:

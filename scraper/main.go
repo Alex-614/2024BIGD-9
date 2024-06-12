@@ -159,6 +159,7 @@ func getInfoStruct(url string, tempDir string) (*VideoInfo, error) {
 }
 
 func main() {
+	fmt.Println("scraper started...")
 	playlistUrl := "https://youtube.com/playlist?list=PL2QF6_2vxWih_qskqy_t_axr0CtbWJXxh&si=QOl4T_2VQ4xXRCUi"
 	urls, err := getUrlsFromPlaylist(playlistUrl)
 	if (err != nil) {
@@ -209,4 +210,9 @@ func main() {
 
 	waitGroup.Wait()
 	fmt.Println(infos.Infos)
+	fmt.Println(infos)
+
+
+
+	fmt.Println("scraper finished.")
 }

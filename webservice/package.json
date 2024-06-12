@@ -2,10 +2,14 @@
   "name": "2024bigd-9",
   "version": "1.0.0",
   "description": "Projekt Repository Gruppe 9 BigData SoSe 2024 TH Bingen",
-  "main": "database.js",
+  "main": "service.js",
   "scripts": {
     "start": "node service.js"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "BigD",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "mongodb": "^6.7"
+  }
 }

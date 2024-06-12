@@ -2,15 +2,14 @@ db = db.getSiblingDB('BigDNews'); // alternative to: use BigDNews
 
 db.createUser(
   {
-    user: "admin",
+    user: "bigdadmin",
     pwd: "admin",
-    roles: [ { role: "userAdminAnyDatabase", db: "admin" }, 
-             { role: "dbAdminAnyDatabase", db: "admin" }, 
-             { role: "readWriteAnyDatabase", db: "admin" } ]
+    roles: [ { role: "root", db: "admin" },
+              { role: "readWrite", db: "BigDNews" } ]
   }
 );
 
-db.createCollection("news", {
+db.createCollection("news", {/*
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -204,7 +203,7 @@ db.createCollection("news", {
         }
       }
     }
-  }
+  }*/
 });
 
 db.news.createIndex({ "id": 1 }, { unique: true });

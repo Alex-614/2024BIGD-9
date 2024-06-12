@@ -1,10 +1,15 @@
 FROM node:18
-WORKDIR /root
+WORKDIR /app
 
 COPY package*.json ./
+COPY .npmrc ./
 
-RUN npm clean-install
+#RUN npm install
 
-COPY service.js service.js
+#RUN npm install --verbose --registry=https://registry.npmjs.org/
+RUN npm install --verbose --unsafe-perm
 
-CMD [ "npm", "run", "start" ]
+COPY . .
+
+#CMD [ "npm", "run", "start" ]
+CMD [ "npm", "start" ]

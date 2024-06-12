@@ -1,17 +1,30 @@
-const { createServer } = require('node:http');
+var http = require('http');
 const hostname = '127.0.0.1';
 const port = 3000;
 
 
-const server = createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Hello World');
+var tools = require('./insert.js');
+
+const server = http.createServer(function(req, res) {
+  let body = [];
+  req.on('data', (chunk) => {
+    body.push(chunk);
+  }).on('end', () => {
+    body = Buffer.concat(body).toString();
+    console.log("received request: " + body);
+    tools.insertOrUpdateNews(JSON.parse(body));
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('Data saved!');
+    res.end();
+  });
 });
 
-
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+server.listen(port, function(error) {
+  if(error) {
+    console.log("Error! ", error);
+  } else {
+    console.log("Listening: " + port);
+  }
 });
-
 
