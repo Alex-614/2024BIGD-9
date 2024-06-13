@@ -11,5 +11,7 @@ document = {
     views: 1000,
     likeCount: 2,
     subscribers: 500,
-    transcript: "Hallo"
+    transcript: "Hallo",
+    timestamp: "now"
 };
+ 

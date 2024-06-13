@@ -9,7 +9,7 @@ db.createUser(
   }
 );
 
-db.createCollection("news", {/*
+db.createCollection("news", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -203,7 +203,7 @@ db.createCollection("news", {/*
         }
       }
     }
-  }*/
+  }
 });
 
 db.news.createIndex({ "id": 1 }, { unique: true });
