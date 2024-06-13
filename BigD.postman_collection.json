@@ -1,0 +1,64 @@
+{
+	"info": {
+		"_postman_id": "d2706b84-ca58-47ea-8fcb-710a0960f403",
+		"name": "BigD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28052530"
+	},
+	"item": [
+		{
+			"name": "test insert",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"dQw4w9WgXcQ\",\r\n    \"title\": \"test123\",\r\n    \"channelId\": \"test123\",\r\n    \"createdAt\": \"2018-12-10T13:45:00.000Z\",\r\n    \"commentsEnabled\": true,\r\n    \"commentCount\": 123,\r\n    \"categories\": [\"none\"],\r\n    \"tags\": [\"#test\"],\r\n    \"videoLength\": 123,\r\n    \"views\": 123,\r\n    \"likeCount\": 123,\r\n    \"subscribers\": 123,\r\n    \"transcript\": \"hallo, das ist ein test\",\r\n    \"timestamp\": \"2018-12-10T13:45:00.000Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:3000",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "3000"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test update",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"dQw4w9WgXcQ\",\r\n    \"channelId\": \"test123\",\r\n    \"createdAt\": \"2018-12-10T13:45:00.000Z\",\r\n    \"timestamp\": \"2018-12-10T13:50:00.000Z\",\r\n\r\n    \"title\": \"TEST\",\r\n    \"commentsEnabled\": false,\r\n    \"commentCount\": 321,\r\n    \"categories\": [\"TEST\"],\r\n    \"tags\": [\"#TEST\"],\r\n    \"videoLength\": 321,\r\n    \"views\": 321,\r\n    \"likeCount\": 321,\r\n    \"subscribers\": 321,\r\n    \"transcript\": \"hallo, das ist kein test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:3000",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "3000"
+				}
+			},
+			"response": []
+		}
+	]
+}
