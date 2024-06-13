@@ -7,7 +7,7 @@ document = {
     commentCount: 10,
     categories: ["cat1", "cat2"],
     tags: ["tag1", "tag2"],
-    videoLength: "10:30",
+    videoLength: 123,
     views: 1000,
     likeCount: 2,
     subscribers: 500,
