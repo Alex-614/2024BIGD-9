@@ -23,7 +23,7 @@ type DatabaseNews struct {
 	Url             string   `json:"url"`
 	Title           string   `json:"title"`
 	ChannelId       string   `json:"channelId"`
-	CreatedAt       string   `json:"createdAt"`
+	CreatedAt       int64    `json:"createdAt"`
 	CommentsEnabled bool     `json:"commentsEnabled"`
 	CommentCount    int      `json:"commentCount"`
 	Categories      []string `json:"categories"`
@@ -49,7 +49,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		Url:             info.Url,
 		Title:           info.Title,
 		ChannelId:       info.ChannelId,
-		CreatedAt:       UnixToISO(info.UploadDate),
+		CreatedAt:       info.UploadDate,
 		CommentsEnabled: info.Comments != nil,
 		CommentCount:    commentCount,
 		Categories:      info.Categories,
@@ -75,6 +75,7 @@ func sendToServer(info *VideoInfo, apiUrl string, client *http.Client) error {
 		return fmt.Errorf("could not create request to server")
 	}
 
+	fmt.Println(string(body))
 	res, err := client.Do(req)
 	if err != nil {
 		return err;
