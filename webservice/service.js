@@ -11,7 +11,7 @@ const server = http.createServer(function(req, res) {
     body.push(chunk);
   }).on('end', () => {
     body = Buffer.concat(body).toString();
-    console.log("received request: " + body);
+    //console.log("received request: " + body);
     tools.insertOrUpdateNews(JSON.parse(body));
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/plain');

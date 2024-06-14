@@ -21,7 +21,7 @@ async function insertOrUpdateNews(document) {
         const result = await coll.findOne(query);
 
         let appendFields = makePretty(result, document);
-        console.log(appendFields);
+        //console.log(appendFields);
         if (result) {
 
             // Put insert together.

@@ -9,6 +9,14 @@ db.createUser(
   }
 );
 
+db.createUser(
+  {
+    user: "bigdanalysis",
+    pwd: "analysis",
+    roles: [ { role: "read", db: "BigDNews" } ]
+  }
+);
+
 db.createCollection("news", {
   validator: {
     $jsonSchema: {
