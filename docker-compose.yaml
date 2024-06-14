@@ -19,18 +19,19 @@ services:
     ports:
       - 27017:27017
     healthcheck:
-      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://$$MONGO_INITDB_ROOT_USERNAME:$$MONGO_INITDB_ROOT_PASSWORD@localhost:$$DB_PORT/?authSource=$$MONGO_INITDB_DATABASE --quiet"]
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://$$DB_USER:$$DB_PWD@localhost:$$DB_PORT/?authSource=$$MONGO_INITDB_DATABASE --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
       start_interval: 5s
     environment:
-      MONGO_INITDB_ROOT_USERNAME: bigdadmin
-      MONGO_INITDB_ROOT_PASSWORD: admin
+      DB_USER: bigdadmin
+      DB_PWD: admin
       DB_PORT: 27017
       MONGO_INITDB_DATABASE: BigDNews
-      
+    command:
+     - --auth
 
   bigdnews-service:
     container_name: bigdnews-service
@@ -69,6 +70,8 @@ services:
         condition: service_healthy
     environment:
       SERVICE_URL: bigdnews-service:3000
+      API_URL: http://bigdnews-service:3000
+      PLAYLIST_URL: https://youtube.com/playlist?list=PL2QF6_2vxWih_qskqy_t_axr0CtbWJXxh&si=QOl4T_2VQ4xXRCUi
 
 volumes:
   mongo-data:

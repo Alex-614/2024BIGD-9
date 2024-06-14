@@ -1,14 +1,16 @@
 db = db.getSiblingDB('BigDNews'); // alternative to: use BigDNews
 
+console.log("Creating user: bigdadmin");
 db.createUser(
   {
     user: "bigdadmin",
     pwd: "admin",
     roles: [ { role: "root", db: "admin" },
-              { role: "readWrite", db: "BigDNews" } ]
-  }
+      { role: "dbAdmin", db: "BigDNews" } ]
+    }
 );
-
+  
+console.log("Creating user: bigdanalysis");
 db.createUser(
   {
     user: "bigdanalysis",
