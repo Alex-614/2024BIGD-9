@@ -51,8 +51,7 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
-      DATABASE_URL: mongodb://127.0.0.1:27017/BigDNews
-      NPM_TOKEN: 00000000-0000-0000-0000-000000000000
+      DATABASE_URL: mongodb://bigdadmin:admin@bigdnews-mongo:27017//?authSource=BigDNews
 
   # bigdnews scraper
   bigdnews-scraper:
@@ -68,6 +67,8 @@ services:
     depends_on:
       bigdnews-mongo:
         condition: service_healthy
+    environment:
+      SERVICE_URL: bigdnews-service:3000
 
 volumes:
   mongo-data:

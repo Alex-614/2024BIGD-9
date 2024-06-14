@@ -1,6 +1,6 @@
 
 var mongo = require('mongodb');
-var url = "mongodb://bigdadmin:admin@bigdnews-mongo:27017//?authSource=BigDNews";
+var url = process.env.DATABASE_URL;
 var client = new mongo.MongoClient(url);
 //db = db.getSiblingDB('BigDNews');
 
