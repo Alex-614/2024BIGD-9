@@ -1,218 +1,140 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
-	"os/exec"
-	"path"
-	"regexp"
-	"strings"
 	"sync"
+	"time"
+
+	"github.com/caarlos0/env/v11"
 )
 
-type CommentInfo struct {
-	Id string `json:"id"`
-	AuthorId string `json:"autor_id"`
-	AuthorName string `json:"author"`
-	Text string `json:"text"`
-	LikeCount int `json:"like_count"`
-	Timestamp int `json:"timestamp"`
+type Config struct {
+	ApiUrl      string `env:"API_URL,required"`
+	PlaylistUrl string `env:"PLAYLIST_URL,required"`
+	Threads     int    `env:"THREADS" envDefault:"10"`
 }
 
-type VideoInfo struct {
-	Id string `json:"id"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	ChannelId string `json:"channel_id"`
-	Duration int `json:"duration"`
-	ViewCount int `json:"view_count"`
-	Categories []string `json:"categories"`
-	Tags []string `json:"tags"`
-	LikeCount int `json:"like_count"`
-	ChannelFollower int `json:"channel_follower_counter"`
-	UploadDate int `json:"Timestamp"`
-	Comments []CommentInfo `json:"comments"`
-	Transcript string
+type DatabaseNews struct {
+	Url             string   `json:"url"`
+	Title           string   `json:"title"`
+	ChannelId       string   `json:"channelId"`
+	CreatedAt       string   `json:"createdAt"`
+	CommentsEnabled bool     `json:"commentsEnabled"`
+	CommentCount    int      `json:"commentCount"`
+	Categories      []string `json:"categories"`
+	Tags            []string `json:"tags"`
+	VideoLength     int64    `json:"videoLength"`
+	Views           int      `json:"views"`
+	LikeCount       int      `json:"likeCount"`
+	Subscribers     int      `json:"subscribers"`
+	Transcript      string   `json:"transcript"`
 }
 
-var REGEXP_SUBTITLE_TEXT = regexp.MustCompile("<font.*>(.*)</font>")
-var REGEXP_ID_FROM_URL = regexp.MustCompile("\\/watch\\?v=(.*)\\/?")
-
-func getUrlsFromPlaylist(url string) ([]string, error) {
-	result := []string {}
-	command := exec.Command(
-		"yt-dlp",
-		"--flat-playlist",
-		"--dump-single-json",
-		url,
-	)
-
-	output, err := command.Output();
-	if (err != nil) {
-		return result, err
-	}
-
-	type PlaylistEntryInfo struct {
-		Title string `json:"title"`
-		Url string `json:"url"`
-	}
-
-	type PlaylistInfo struct {
-		Entries []PlaylistEntryInfo `json:"entries"`
-	}
-
-	playlistInfo := new(PlaylistInfo)
-	if err := json.Unmarshal(output, playlistInfo); err != nil {
-		return result, err
-	}
-
-	for _, entry := range playlistInfo.Entries {
-		if (entry.Title != "[Private video]") {
-			result = append(result, entry.Url)
-		}
-	}
-
-	return result, nil;
+func UnixToISO(unixTime int64) string {
+	return time.Unix(int64(unixTime), 0).Format(time.RFC3339)
 }
 
-func getSubtitleFile(tempDir string, url string) (string, error) {
-	filename := REGEXP_ID_FROM_URL.FindStringSubmatch(url)[1]
-
-	cmd := exec.Command(
-		"yt-dlp",
-		"--write-subs",
-		"--write-auto-subs",
-		"--skip-download",
-		"--sub-langs", "de",
-		"--sub-format", "ttml",
-		"--convert-subs", "srt",
-		"--output", path.Join(tempDir, filename),
-		url,
-	)
-
-	if err := cmd.Run(); err != nil {
-		return "", err
+func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
+	commentCount := 0
+	if info.Comments != nil {
+		commentCount = len(*info.Comments)
 	}
 
-	return path.Join(tempDir, filename + ".de.srt"), nil
+	return &DatabaseNews{
+		Url:             info.Url,
+		Title:           info.Title,
+		ChannelId:       info.ChannelId,
+		CreatedAt:       UnixToISO(info.UploadDate),
+		CommentsEnabled: info.Comments != nil,
+		CommentCount:    commentCount,
+		Categories:      info.Categories,
+		Tags:            info.Tags,
+		VideoLength:     info.Duration,
+		Views:           info.ViewCount,
+		LikeCount:       info.LikeCount,
+		Subscribers:     info.ChannelFollower,
+		Transcript:      info.Transcript,
+	}
 }
 
-func convertSubtitleFile(subtitlePath string) (string, error) {
-	file, err := os.ReadFile(subtitlePath)
-	if (err != nil) {
-		return "", err
-	}
+func sendToServer(info *VideoInfo, apiUrl string) error {
+	databaseInfo := DatabaseNewsFromVideoInfo(info)
 
-	matches := REGEXP_SUBTITLE_TEXT.FindAllStringSubmatch(string(file), -1)
-	result := []string {};
-
-	for _, match := range matches {
-		if match != nil {
-			result = append(result, match[1])
-		}
-	}
-
-	return strings.Join(result, "\n"), nil
-}
-
-func getSubtitles(url string, temporyDirectory string) (string, error) {
-	subtitleFile, err := getSubtitleFile(temporyDirectory, url)
-	if (err != nil) {
-		return "", err
-	}
-
-	subtitle, err := convertSubtitleFile(subtitleFile)
-	if (err != nil) {
-		return "", err
-	}
-
-	return subtitle, nil
-}
-
-func getInfoStruct(url string, tempDir string) (*VideoInfo, error) {
-	command := exec.Command(
-		"yt-dlp",
-		"--dump-single-json",
-		"--write-comments",
-		url,
-	)
-
-	output, err := command.Output()
-	if (err != nil) {
-		return nil, err
-	}
-
-	info := new(VideoInfo)
-	if err := json.Unmarshal(output, info); err != nil {
-		return nil, err
-	}
-
-	subtitles, err := getSubtitles(url, tempDir)
+	body, err := json.Marshal(databaseInfo)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("could not convert info struct to json")
 	}
 
-	info.Transcript = subtitles
+	_, err = http.NewRequest(http.MethodPost, apiUrl, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("could not send json to server")
+	}
 
-	return info, nil
+	return nil
 }
 
 func main() {
-	fmt.Println("scraper started...")
-	playlistUrl := "https://youtube.com/playlist?list=PL2QF6_2vxWih_qskqy_t_axr0CtbWJXxh&si=QOl4T_2VQ4xXRCUi"
-	urls, err := getUrlsFromPlaylist(playlistUrl)
-	if (err != nil) {
-		fmt.Println("could not get urls from playlist")
+	config := Config{}
+	if err := env.Parse(&config); err != nil {
+		fmt.Println("could not parse config from environent variables")
 		fmt.Println(err)
-		os.Exit(1);
+		return
 	}
 
-	type AtomicInfos struct {
-		Infos []VideoInfo
-		Mutex sync.Mutex
-	}
-
-	waitGroup := sync.WaitGroup{}
-	infos := AtomicInfos{
-		Infos: []VideoInfo{},
-		Mutex: sync.Mutex{},
-	}
+	fmt.Println(config)
 
 	temporyDirectory, err := os.MkdirTemp("", "bild-scraper")
-	if (err != nil) {
+	if err != nil {
 		fmt.Println("could not create temporary directory")
 		fmt.Println(err)
-		os.Exit(2);
+		return
 	}
 
-	defer os.RemoveAll(temporyDirectory);
+	defer os.RemoveAll(temporyDirectory)
 
-	for _, url := range urls {
+	infos, urls := make(chan *VideoInfo), make(chan string)
+	waitGroup := sync.WaitGroup{}
+
+	for i := 0; i < config.Threads; i++ {
 		waitGroup.Add(1)
 
-		go func(url string) {
+		go func() {
 			defer waitGroup.Done()
-			info, err := getInfoStruct(url, temporyDirectory)
 
-			if (err != nil) {
-				fmt.Println("could not get info struct")
-				fmt.Println(err)
-				return
+			for url := range urls {
+				fmt.Printf("processing %s\n", url)
+				info, err := getInfoStruct(url, temporyDirectory)
+
+				if err != nil {
+					fmt.Println("could not get info struct")
+					fmt.Println(err)
+					return
+				}
+
+				infos <- info
 			}
-
-			infos.Mutex.Lock()
-			infos.Infos = append(infos.Infos, *info)
-			fmt.Printf("%d/%d\n", len(infos.Infos), len(urls))
-			infos.Mutex.Unlock()
-		}(url)
+		}()
 	}
 
-	waitGroup.Wait()
-	fmt.Println(infos.Infos)
-	fmt.Println(infos)
+	go func() {
+		if playlistUrls, err := getUrlsFromPlaylist(config.PlaylistUrl); err == nil {
+			for _, url := range playlistUrls {
+				urls <- url
+			}
+		}
 
+		close(urls)
+		waitGroup.Wait()
+		close(infos)
+	}()
 
-
-	fmt.Println("scraper finished.")
+	for info := range infos {
+		if err := sendToServer(info, config.PlaylistUrl); err != nil {
+			fmt.Println(err)
+		}
+	}
 }

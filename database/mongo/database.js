@@ -21,11 +21,11 @@ db.createCollection("news", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["id", "title", "channelId", "createdAt", "commentsEnabled", "commentCount", "categories", "tags", "videoLength", "views", "likeCount", "subscribers", "timestamp", "transcript"],
+      required: ["url", "title", "channelId", "createdAt", "commentsEnabled", "commentCount", "categories", "tags", "videoLength", "views", "likeCount", "subscribers", "timestamp", "transcript"],
       properties: {
-        id: {
+        url: {
           bsonType: "string",
-          description: "Id of the video"
+          description: "Url of the video"
         },
         title: {
           bsonType: "array",
@@ -214,4 +214,4 @@ db.createCollection("news", {
   }
 });
 
-db.news.createIndex({ "id": 1 }, { unique: true });
+db.news.createIndex({ "url": 1 }, { unique: true });
