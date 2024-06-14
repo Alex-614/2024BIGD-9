@@ -70,10 +70,12 @@ func sendToServer(info *VideoInfo, apiUrl string) error {
 		return fmt.Errorf("could not convert info struct to json")
 	}
 
-	_, err = http.NewRequest(http.MethodPost, apiUrl, bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, apiUrl, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("could not send json to server")
 	}
+
+	fmt.Println(req)
 
 	return nil
 }
