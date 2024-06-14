@@ -62,7 +62,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 	}
 }
 
-func sendToServer(info *VideoInfo, apiUrl string) error {
+func sendToServer(info *VideoInfo, apiUrl string, client *http.Client) error {
 	databaseInfo := DatabaseNewsFromVideoInfo(info)
 
 	body, err := json.Marshal(databaseInfo)
@@ -72,10 +72,15 @@ func sendToServer(info *VideoInfo, apiUrl string) error {
 
 	req, err := http.NewRequest(http.MethodPost, apiUrl, bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("could not send json to server")
+		return fmt.Errorf("could not create request to server")
 	}
 
-	fmt.Println(req)
+	res, err := client.Do(req)
+	if err != nil {
+		return err;
+	}
+
+	fmt.Println(res)
 
 	return nil
 }
@@ -87,8 +92,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println(config)
 
 	temporyDirectory, err := os.MkdirTemp("", "bild-scraper")
 	if err != nil {
@@ -137,8 +140,12 @@ func main() {
 		close(infos)
 	}()
 
+	client := http.Client {
+	 Timeout: 30 * time.Second,
+  }
+
 	for info := range infos {
-		if err := sendToServer(info, config.PlaylistUrl); err != nil {
+		if err := sendToServer(info, config.PlaylistUrl, &client); err != nil {
 			fmt.Println(err)
 		}
 	}
