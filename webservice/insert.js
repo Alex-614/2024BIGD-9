@@ -16,7 +16,7 @@ async function insertOrUpdateNews(document) {
         //const result = await coll.find().toArray();
         //return result;
 
-        var query = { id: document.id };
+        var query = { url: document.url };
         
         const result = await coll.findOne(query);
 
@@ -60,7 +60,7 @@ function makePretty(result, document) {
 
     let appendFields = {};
     if (result == null) {
-        appendFields.id = document.id;
+        appendFields.url = document.url;
         appendFields.channelId = document.channelId;
         appendFields.createdAt = new Date(document.createdAt);
         appendFields.timestamp = new Date(document.timestamp);
