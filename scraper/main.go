@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -121,9 +122,11 @@ func main() {
 	}
 
 	go func() {
-		if playlistUrls, err := getUrlsFromPlaylist(config.PlaylistUrl); err == nil {
-			for _, url := range playlistUrls {
-				urls <- url
+		for _, playlistUrl := range strings.Split(config.PlaylistUrl, ",") {
+			if playlistUrls, err := getUrlsFromPlaylist(playlistUrl); err == nil {
+				for _, url := range playlistUrls {
+					urls <- url
+				}
 			}
 		}
 
