@@ -145,7 +145,7 @@ func main() {
   }
 
 	for info := range infos {
-		if err := sendToServer(info, config.PlaylistUrl, &client); err != nil {
+		if err := sendToServer(info, config.ApiUrl, &client); err != nil {
 			fmt.Println(err)
 		}
 	}
