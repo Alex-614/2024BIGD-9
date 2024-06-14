@@ -12,6 +12,6 @@ RUN go mod download
 
 COPY main.go youtube.go ./
 
-RUN go build main.go
+RUN go build main.go youtube.go
 
 ENTRYPOINT [ "./main" ]
