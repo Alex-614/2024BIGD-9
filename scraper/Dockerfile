@@ -6,7 +6,11 @@ RUN \
 	apt-get install --yes yt-dlp=2023.03.04-1 && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY go.mod main.go ./
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY main.go youtube.go ./
 
 RUN go build main.go
 
