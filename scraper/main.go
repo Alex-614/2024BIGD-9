@@ -23,7 +23,7 @@ type DatabaseNews struct {
 	Url             string   `json:"url"`
 	Title           string   `json:"title"`
 	ChannelId       string   `json:"channelId"`
-	CreatedAt       string   `json:"createdAt"`
+	CreatedAt       int64    `json:"createdAt"`
 	CommentsEnabled bool     `json:"commentsEnabled"`
 	CommentCount    int      `json:"commentCount"`
 	Categories      []string `json:"categories"`
@@ -36,10 +36,6 @@ type DatabaseNews struct {
 	Timestamp       string   `json:"timestamp"`
 }
 
-func UnixToISO(unixTime int64) string {
-	return time.Unix(int64(unixTime), 0).Format(time.RFC3339)
-}
-
 func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 	commentCount := 0
 	if info.Comments != nil {
@@ -50,7 +46,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		Url:             info.Url,
 		Title:           info.Title,
 		ChannelId:       info.ChannelId,
-		CreatedAt:       UnixToISO(info.UploadDate),
+		CreatedAt:       info.UploadDate,
 		CommentsEnabled: info.Comments != nil,
 		CommentCount:    commentCount,
 		Categories:      info.Categories,
