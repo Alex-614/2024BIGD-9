@@ -40,7 +40,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 	commentsEnabled := info.Comments != nil
 	commentCount := 0
 
-	if !commentsEnabled {
+	if commentsEnabled {
 		commentCount = len(*info.Comments)
 	}
 
