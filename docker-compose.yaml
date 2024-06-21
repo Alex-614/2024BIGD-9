@@ -72,7 +72,7 @@ services:
     environment:
       SERVICE_URL: bigdnews-service:3000
       API_URL: http://bigdnews-service:3000
-      PLAYLIST_URL: "https://www.youtube.com/playlist?list=PL2QF6_2vxWig7pqu8ipls4KnTKD6SSidl", "https://www.youtube.com/playlist?list=PLWK1Hx_NM2f7pylDyzwZRKbbKbF78gSr6", "https://www.youtube.com/playlist?list=PLwneNHYIBCISaAk_rizKfxde9OjT40Xz1"
+      PLAYLIST_URL: "https://www.youtube.com/playlist?list=PL2QF6_2vxWig7pqu8ipls4KnTKD6SSidl, https://www.youtube.com/playlist?list=PLWK1Hx_NM2f7pylDyzwZRKbbKbF78gSr6, https://www.youtube.com/playlist?list=PLwneNHYIBCISaAk_rizKfxde9OjT40Xz1"
 
   restarter:
     image: docker:cli
