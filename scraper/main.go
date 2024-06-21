@@ -20,20 +20,20 @@ type Config struct {
 }
 
 type DatabaseNews struct {
-	Url             string   `json:"url"`
-	Title           string   `json:"title"`
-	ChannelId       string   `json:"channelId"`
-	CreatedAt       int64    `json:"createdAt"`
-	CommentsEnabled bool     `json:"commentsEnabled"`
-	CommentCount    int      `json:"commentCount"`
-	Categories      []string `json:"categories"`
-	Tags            []string `json:"tags"`
-	VideoLength     int64    `json:"videoLength"`
-	Views           int      `json:"views"`
-	LikeCount       int      `json:"likeCount"`
-	Subscribers     int      `json:"subscribers"`
-	Transcript      string   `json:"transcript"`
-	Timestamp       int64    `json:"timestamp"`
+	Url             string     `json:"url"`
+	Title           string     `json:"title"`
+	ChannelId       string     `json:"channelId"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	CommentsEnabled bool       `json:"commentsEnabled"`
+	CommentCount    int        `json:"commentCount"`
+	Categories      []string   `json:"categories"`
+	Tags            []string   `json:"tags"`
+	VideoLength     int64      `json:"videoLength"`
+	Views           int        `json:"views"`
+	LikeCount       int        `json:"likeCount"`
+	Subscribers     int        `json:"subscribers"`
+	Transcript      string     `json:"transcript"`
+	Timestamp       time.Time  `json:"timestamp"`
 }
 
 func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
@@ -48,7 +48,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		Url:             info.Url,
 		Title:           info.Title,
 		ChannelId:       info.ChannelId,
-		CreatedAt:       info.UploadDate,
+		CreatedAt:       time.Unix(info.UploadDate, 0),
 		CommentsEnabled: commentsEnabled,
 		CommentCount:    commentCount,
 		Categories:      info.Categories,
@@ -58,7 +58,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		LikeCount:       info.LikeCount,
 		Subscribers:     info.ChannelFollower,
 		Transcript:      info.Transcript,
-		Timestamp:       time.Now().Unix(),
+		Timestamp:       time.Now(),
 	}
 }
 
