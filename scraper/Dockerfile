@@ -1,17 +1,21 @@
-FROM golang:1.22
+FROM golang:1.22 as build
 WORKDIR /root
-
-RUN \
-	apt-get update && \
-	apt-get install --yes yt-dlp=2023.03.04-1 && \
-	rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY main.go youtube.go ./
+COPY *.go ./
 
-RUN go build main.go youtube.go
+RUN CGO_ENABLED=0 go build -- *.go
 
-ENTRYPOINT [ "./main" ]
+FROM alpine:20240606
+WORKDIR /root
+
+RUN apk add --no-cache yt-dlp=2024.05.27-r0
+
+COPY --from=build /root/main ./main
+
+RUN ls
+
+CMD [ "./main" ]
