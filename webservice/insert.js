@@ -21,7 +21,7 @@ async function insertOrUpdateNews(document) {
         const result = await coll.findOne(query);
 
         let appendFields = makePretty(result, document);
-        //console.log(appendFields);
+        console.log(appendFields);
         if (result) {
 
             // Put insert together.
@@ -35,18 +35,18 @@ async function insertOrUpdateNews(document) {
                 coll.updateOne(query, updateQuery, function(err, res) {
                     if (err) throw err;
                     console.log("Document updated");
-                    db.close();
+                    //db.close();
                 });
             } else {
                 console.log("No changes detected");
-                db.close();
+                //db.close();
             }
         } else { // New Video
 
             coll.insertOne(appendFields, (err, res) => {
                 if (err) throw err;
                 console.log("Document inserted");
-                db.close();
+                //db.close();
             });
             
         }
@@ -54,6 +54,7 @@ async function insertOrUpdateNews(document) {
     } catch (err) {
         console.log(err);
     }
+
 }
 
 function makePretty(result, document) {
@@ -67,7 +68,7 @@ function makePretty(result, document) {
     }
     // Append new data to array fields if they are differend.
     let time = new Date(document.timestamp);
-
+    
     // changing fields:
     if (result == null || result.title[result.title.length - 1].title !== document.title) {
         appendFields['title'] = [{ title: document.title, timestamp: time }];
