@@ -33,12 +33,14 @@ type DatabaseNews struct {
 	LikeCount       int      `json:"likeCount"`
 	Subscribers     int      `json:"subscribers"`
 	Transcript      string   `json:"transcript"`
-	Timestamp       string   `json:"timestamp"`
+	Timestamp       int64    `json:"timestamp"`
 }
 
 func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
+	commentsEnabled := info.Comments != nil
 	commentCount := 0
-	if info.Comments != nil {
+
+	if commentsEnabled {
 		commentCount = len(*info.Comments)
 	}
 
@@ -47,7 +49,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		Title:           info.Title,
 		ChannelId:       info.ChannelId,
 		CreatedAt:       info.UploadDate,
-		CommentsEnabled: info.Comments != nil,
+		CommentsEnabled: commentsEnabled,
 		CommentCount:    commentCount,
 		Categories:      info.Categories,
 		Tags:            info.Tags,
@@ -56,7 +58,7 @@ func DatabaseNewsFromVideoInfo(info *VideoInfo) *DatabaseNews {
 		LikeCount:       info.LikeCount,
 		Subscribers:     info.ChannelFollower,
 		Transcript:      info.Transcript,
-		Timestamp:       time.Now().Format(time.RFC3339),
+		Timestamp:       time.Now().Unix(),
 	}
 }
 
