@@ -1,0 +1,77 @@
+{
+"identifier": "url",
+"constFields": [
+    {
+        "name": "url",
+        "description": "Url of the video",
+        "bsonType": "string"
+    },
+    {
+        "name": "channelId",
+        "description": "From which Newsoutlet the news was pulled",
+        "bsonType": "string"
+    },
+    {
+        "name": "createdAt",
+        "description": "Date and time of the video release",
+        "bsonType": "date"
+    },
+    {
+        "name": "timestamp",
+        "description": "Timestamp of when the data was inserted",
+        "bsonType": "date"
+    }
+],
+"changingFields": [
+    {
+        "name": "title",
+        "description": "The title",
+        "bsonType": "string"
+    },
+    {
+        "name": "commentsEnabled",
+        "description": "True= comments enabled, False= comments disabled",
+        "bsonType": "bool"
+    },
+    {
+        "name": "commentCount",
+        "description": "Number of comments",
+        "bsonType": "int"
+    },
+    {
+        "name": "categories",
+        "description": "Categories from the video",
+        "bsonType": "array"
+    },
+    {
+        "name": "tags",
+        "description": "Tags from the video",
+        "bsonType": "array"
+    },
+    {
+        "name": "videoLength",
+        "description": "Length of the video in seconds",
+        "bsonType": "int"
+    },
+    {
+        "name": "views",
+        "description": "Number of views",
+        "bsonType": "int"
+    },
+    {
+        "name": "likeCount",
+        "description": "Number of likes",
+        "bsonType": "int"
+    },
+    {
+        "name": "subscribers",
+        "description": "Number of subscribers",
+        "bsonType": "int"
+    },
+    {
+        "name": "transcript",
+        "description": "The transcript",
+        "bsonType": "string"
+    }
+]
+}

@@ -14,6 +14,7 @@ services:
     restart: on-failure
     volumes:
       - ./database/mongo/database.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./config/Fields.json:/tmp/Fields.json:ro
       - mongo-data:/data/db
       - mongo-configdb:/data/configdb
     ports:
@@ -42,7 +43,8 @@ services:
       context: ./webservice
       dockerfile: Dockerfile
     image: bigdnews-service
-    #volumes:
+    volumes:
+      - ./config/Fields.json:/tmp/Fields.json:ro
       #- ./service:/usr/app/
       #- /usr/app/node_modules
     ports:

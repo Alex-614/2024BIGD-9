@@ -1,219 +1,85 @@
+// create db
 db = db.getSiblingDB('BigDNews'); // alternative to: use BigDNews
 
-console.log("Creating user: bigdadmin");
+// create admin user
 db.createUser(
-  {
-    user: "bigdadmin",
-    pwd: "admin",
-    roles: [ { role: "root", db: "admin" },
-      { role: "dbAdmin", db: "BigDNews" } ]
+    {
+        user: "bigdadmin",
+        pwd: "admin",
+        roles: [{ role: "root", db: "admin" },
+        { role: "dbAdmin", db: "BigDNews" }]
     }
 );
-  
-console.log("Creating user: bigdanalysis");
-db.createUser(
-  {
-    user: "bigdanalysis",
-    pwd: "analysis",
-    roles: [ { role: "read", db: "BigDNews" } ]
-  }
-);
+console.log("Created user: bigdadmin");
 
-db.createCollection("news", {
-  validator: {
-    $jsonSchema: {
-      bsonType: "object",
-      required: ["url", "title", "channelId", "createdAt", "commentsEnabled", "commentCount", "categories", "tags", "videoLength", "views", "likeCount", "subscribers", "timestamp", "transcript"],
-      properties: {
-        url: {
-          bsonType: "string",
-          description: "Url of the video"
-        },
-        title: {
-          bsonType: "array",
-          description: "Array of titles + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              title: {
-                bsonType: "string",
-                description: "The title"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the title"
-              }
-            }
-          }
-        },
-        channelId: {
-          bsonType: "string",
-          description: "From which Newsoutlet the news was pulled"
-        },
-        createdAt: {
-          bsonType: "date",
-          description: "Date and time of the video release"
-        },
-        commentsEnabled: {
-          bsonType: "array",
-          description: "Array of bools + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              comments: {
-                bsonType: "bool",
-                description: "True= comments enabled, False= comments disabled"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the comment"
-              }
-            }
-          }
-        },
-        commentCount: {
-          bsonType: "array",
-          description: "Array of commentcount + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              count: {
-                bsonType: "int",
-                description: "Number of comments"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the comment"
-              }
-            }
-          }
-        },
-        categories: {
-          bsonType: "array",
-          description: "Array of categories + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              categories: {
-                bsonType: "array",
-                description: "Categories from the video"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the categories"
-              }
-            }
-          }
-        },
-        tags: {
-          bsonType: "array",
-          description: "Array of tags + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              tags: {
-                bsonType: "array",
-                description: "Tags from the video"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the tags"
-              }
-            }
-          }
-        },
-        videoLength: {
-          bsonType: "array",
-          description: "Array of videoLengths + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              length: {
-                bsonType: "int",
-                description: "Length of the video in seconds"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the length"
-              }
-            }
-          }
-        },
-        views: {
-          bsonType: "array",
-          description: "Array of views + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              views: {
-                bsonType: "int",
-                description: "Number of views"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the views"
-              }
-            }
-          }
-        },
-        likeCount: {
-          bsonType: "array",
-          description: "Array of likeCount + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              likeCount: {
-                bsonType: "int",
-                description: "Number of likes"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the likeCount"
-              }
-            }
-          }
-        },
-        subscribers: {
-          bsonType: "array",
-          description: "Array of subscribers + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              count: {
-                bsonType: "int",
-                description: "Number of subscribers"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the count"
-              }
-            }
-          }
-        },
-        timestamp: {
-          bsonType: "date",
-          description: "Timestamp of when the data was inserted"
-        },
-        transcript: {
-          bsonType: "array",
-          description: "Array of transcripts + timestamp",
-          items: {
-            bsonType: "object",
-            properties: {
-              transcript: {
-                bsonType: "string",
-                description: "The transcript"
-              },
-              timestamp: {
-                bsonType: "date",
-                description: "Timestamp of the transcript"
-              }
-            }
-          }
-        }
-      }
+// create user for analysis
+db.createUser(
+    {
+        user: "bigdanalysis",
+        pwd: "analysis",
+        roles: [{ role: "read", db: "BigDNews" }]
     }
-  }
+);
+console.log("Created user: bigdanalysis");
+
+
+
+
+// convert <name>, <description>, <bsonType> to mongodb validation scheme
+function generateValidationScheme(name, description, bsonType) {
+    
+    name = (name != null ? name : "null");
+    bsonType = (bsonType != null ? bsonType : "string");
+    description = (description != null ? description : name);
+
+    let scheme = 
+    {
+        bsonType: "array",
+        description: "Array of " + name + " + timestamp",
+        items: {
+            bsonType: "object",
+            properties: {
+                [name]: {
+                    bsonType: bsonType,
+                    description: description
+                },
+                timestamp: {
+                    bsonType: "date",
+                    description: "Timestamp of " + name
+                }
+            }
+        }
+    }
+    return scheme;
+}
+
+// generating the validator jsonScheme
+let fields = require("/tmp/Fields.json");
+let jsonSchema = {
+    bsonType: "object",
+    required: [],
+    properties: null
+};
+let properties = {}
+// adding all changing fields to the validation scheme
+for (let field of fields["changingFields"]) {
+    properties[field["name"]] = generateValidationScheme(field["name"], field["description"], field["bsonType"]);
+    jsonSchema["required"].push(field["name"]);
+}
+// adding all const fields to the validation scheme
+for (let field of fields["constFields"]) {
+    properties[field["name"]] = {description: field["description"], bsonType: field["bsonType"]};
+    jsonSchema["required"].push(field["name"]);
+}
+jsonSchema["properties"] = properties;
+
+// create the collection with the validation scheme
+db.createCollection("news", {
+    validator: {
+        $jsonSchema: jsonSchema
+    }
 });
+console.log("Created collection: news");
+
 
 db.news.createIndex({ "url": 1 }, { unique: true });
