@@ -82,4 +82,4 @@ db.createCollection("news", {
 console.log("Created collection: news");
 
 
-db.news.createIndex({ "url": 1 }, { unique: true });
+db.news.createIndex({ [fields["identifier"]]: 1 }, { unique: true });
