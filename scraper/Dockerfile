@@ -9,10 +9,10 @@ COPY *.go ./
 
 RUN CGO_ENABLED=0 go build -- *.go
 
-FROM alpine:20240606
+FROM alpine:3.20.1
 WORKDIR /root
 
-RUN apk add --no-cache yt-dlp=2024.05.27-r0
+RUN apk add --no-cache yt-dlp=2024.07.09-r0
 
 COPY --from=build /root/main ./main
 
