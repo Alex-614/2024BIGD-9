@@ -80,7 +80,14 @@ services:
     image: docker:cli
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: ["/bin/sh", "-c", "while true; do sleep 3600; if [ $(docker inspect -f '{{.State.Running}}' bigdnews-scraper) = \"false\" ]; then docker restart bigdnews-scraper; else echo scraper still running; fi done"]
+    command: ["/bin/sh", "-c", "\
+                while true; do sleep 3600; \
+                  if [ $(docker inspect -f '{{.State.Running}}' bigdnews-scraper) = \"false\" ]; \
+                    then docker restart bigdnews-scraper; \
+                  else \
+                    echo scraper still running; \
+                  fi \
+                done"]
     restart: unless-stopped
 
 
