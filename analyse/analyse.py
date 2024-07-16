@@ -1,13 +1,13 @@
 import pymongo
-import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from datetime import datetime
 from collections import Counter
 
 
-def dailyViews(colNews):
+def dailyViews(colNews, channel):
     # Get all views arrays
-    data = colNews.find({}, {"_id": 0, "views": 1})
+    data = colNews.find({"channelId": channelIds[channel]}, {"_id": 0, "views": 1})
 
     # From each array take the last entry of views per day and sum up to total views per date
     dateWithViews = {}
@@ -31,20 +31,18 @@ def dailyViews(colNews):
 
     plt.figure(figsize=(10, 8))
     plt.plot(dateWithViews.keys(), dateWithViews.values())
-    plt.ylim(bottom=45000000)  # y axis offset
     plt.xlabel("Datum")
     plt.ylabel("Views")
-    plt.title("Anzahl der Gesamtviews pro Tag")
+    plt.title(channel + " - Anzahl der Gesamtviews pro Tag")
     plt.xticks(rotation=90)
     formatter = ticker.ScalarFormatter(useOffset=False)
     formatter.set_scientific(False)
     plt.gca().yaxis.set_major_formatter(formatter)
-    plt.savefig("./totalViewsPerDate.pdf")
+    plt.savefig("./dailyViews/totalViewsPerDate_" + channel + ".pdf")
 
-
-def tagsFromAllVideos(colNews):
+def tagsFromAllVideos(colNews, channel):
     # Get all titles
-    data = colNews.find({}, {"_id": 0, "tags": 1})
+    data = colNews.find({"channelId": channelIds[channel]}, {"_id": 0, "tags": 1})
 
     tagsList = []  # List with all tags from every video (only first iteration)
 
@@ -56,17 +54,6 @@ def tagsFromAllVideos(colNews):
 
     # count each tag occurence
     tagsCount = Counter(allTags)
-    """tagsCount.__delitem__("bild")
-    tagsCount.__delitem__("bild youtube")
-    tagsCount.__delitem__("bild reporter")
-    tagsCount.__delitem__("bild news")
-    tagsCount.__delitem__("bild aktuell")
-    tagsCount.__delitem__("bild nachrichten")
-    tagsCount.__delitem__("bild zeitung")
-    tagsCount.__delitem__("bild video")
-    tagsCount.__delitem__("nachrichten")
-    tagsCount.__delitem__("nachrichten aktuell")
-    tagsCount.__delitem__("video")"""
 
     tagsCountFirst40 = tagsCount.most_common(40)
 
@@ -76,15 +63,32 @@ def tagsFromAllVideos(colNews):
     plt.bar(tag, count)
     plt.xlabel("Tag")
     plt.ylabel("Anzahl")
-    plt.title("Anzahl der Tags in allen Videos")
+    plt.title(channel + " - Anzahl der Tags in allen Videos")
     plt.xticks(rotation=90)
     plt.tight_layout()
-    plt.show()
-    # plt.savefig("./plot.pdf")
+    plt.savefig("./tagsCount/tagsCount_" + channel + ".pdf")
+    
+    # Cleaned Version without trivial tags
+    trivialTags = ["bild", "bild youtube", "bild reporter", "bild news", "bild aktuell", "bild nachrichten", "bild zeitung",
+                   "bild video", "nachrichten", "nachrichten aktuell", "video", "ntv", "n-tv", "Aktuell", "Nachrichten",
+                   "n-t-v", "TV", "News", "ZEIT ONLINE", "Nachrichten", "News", "ntvNachrichtenGmbH", "Nachrichtenfernsehen",
+                   "Nachrichtensender"]
+    
+    for trivialTag in trivialTags:
+        tagsCount.__delitem__(trivialTag)
 
-    # open window to show plot
-    # plt.show()
+    tagsCountFirst40 = tagsCount.most_common(40)
 
+    tag, count = zip(*tagsCountFirst40)
+
+    plt.figure(figsize=(10, 10))
+    plt.bar(tag, count)
+    plt.xlabel("Tag")
+    plt.ylabel("Anzahl")
+    plt.title(channel + " - Anzahl der Tags in allen Videos")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig("./tagsCount/CleanedTagsCount_" + channel + ".pdf")
 
 def wordsFromTitles(colNews):
     # Get all titles arrays
@@ -113,10 +117,9 @@ def wordsFromTitles(colNews):
     plt.xticks(rotation=90)
     plt.savefig("./wordsInTitle.pdf")
 
-
 def uploadsPerDay(colNews):
     # get all createdAt arrays
-    data = colNews.find({}, {"_id": 0, "createdAt": 1})
+    data = colNews.find({"createdAt": { "$gt": datetime(2024, 6, 17)} }, {"_id": 0, "createdAt": 1})
 
     counter = {}
     for video in data:
@@ -131,14 +134,10 @@ def uploadsPerDay(colNews):
     plt.figure(figsize=(16, 12))
     plt.plot(sortedCounter.keys(), sortedCounter.values())
     plt.xlabel("Datum")
-    allTicks = plt.xticks()[0]
-    selectedTicks = allTicks[::6]
-    plt.xticks(selectedTicks)
     plt.ylabel("Anzahl")
     plt.title("Uploads pro Tag")
     plt.xticks(rotation=90)
     plt.savefig("./uploadsPerDay.pdf")
-
 
 def tagsPerWeekday(colNews):
     # get all tag arrays
@@ -153,21 +152,29 @@ def tagsPerWeekday(colNews):
             tagsPerDay[dateStr] = tagsPerDay[dateStr] + video["tags"][0]["tags"]
 
     for day, tags in tagsPerDay.items():
-        countMonday = Counter(tags)  # count how often tag appears
-        sortedCountMonday = dict(
-            sorted(countMonday.items(), key=lambda item: item[1], reverse=True)
+        count = Counter(tags)  # count how often tag appears
+        sortedCount = dict(
+            sorted(count.items(), key=lambda item: item[1], reverse=True)
         )
-        sortedCountMonday60 = {
-            key: sortedCountMonday[key] for key in list(sortedCountMonday.keys())[:60]
+        # Cleaned Version without trivial tags
+        trivialTags = ["bild", "bild youtube", "bild reporter", "bild news", "bild aktuell", "bild nachrichten", "bild zeitung",
+                   "bild video", "nachrichten", "nachrichten aktuell", "video", "ntv", "n-tv", "Aktuell", "Nachrichten",
+                   "n-t-v", "TV", "News", "ZEIT ONLINE", "Nachrichten", "News", "ntvNachrichtenGmbH", "Nachrichtenfernsehen",
+                   "Nachrichtensender"]
+    
+        for trivialTag in trivialTags:
+            sortedCount.pop(trivialTag, None)
+                    
+        sortedCount60 = {
+            key: sortedCount[key] for key in list(sortedCount.keys())[:60]
         }  # only pick first 60 words for plotting
         plt.figure(figsize=(16, 12))
-        plt.plot(sortedCountMonday60.keys(), sortedCountMonday60.values())
+        plt.plot(sortedCount60.keys(), sortedCount60.values())
         plt.xlabel("Tag")
         plt.ylabel("Anzahl")
         plt.title("Tags pro Wochentag")
         plt.xticks(rotation=90)
         plt.savefig("./tagsPerWeekday/tagsPerWeekday" + str(day) + ".pdf")
-
 
 def subscriberPerDate(colNews):
     # Get all subscribers arrays
@@ -232,9 +239,9 @@ def commentsPerDate(colNews):
     plt.gca().yaxis.set_major_formatter(formatter)
     plt.savefig("./totalCommentsPerDate.pdf")
     
-def countCommentsDisabled(colNews):
+def countCommentsDisabled(colNews, channel):
     # Get all commentsEnabled array
-    data = colNews.find({}, {"_id": 0, "commentsEnabled": 1})
+    data = colNews.find({"channelId": channelIds[channel]}, {"_id": 0, "commentsEnabled": 1})
     enabledCount = 0
     disabledCount = 0
     for video in data:
@@ -246,15 +253,9 @@ def countCommentsDisabled(colNews):
     
     plotDict = {"Aktiviert":enabledCount, "Deaktiviert":disabledCount}
     plt.figure(figsize=(10, 8))
-    plt.bar(plotDict.keys(), plotDict.values())
-    plt.xlabel("Datum")
-    plt.ylabel("Anzahl")
-    plt.title("Anzahl der Videos mit Aktivierten / Deaktivierten Kommentaren")
-    plt.xticks(rotation=90)
-    formatter = ticker.ScalarFormatter(useOffset=False)
-    formatter.set_scientific(False)
-    plt.gca().yaxis.set_major_formatter(formatter)
-    plt.savefig("./countCommentsDisabled.pdf")
+    plt.title(channel + " - Anzahl der Videos mit Aktivierten / Deaktivierten Kommentaren")
+    plt.pie(plotDict.values(), labels=plotDict.keys(), autopct='%1.1f%%')
+    plt.savefig("./countCommentsDisabled/countCommentsDisabled_" + channel + ".pdf")
     
 def countTitlesChanged(colNews):
      # Get all titles arrays
@@ -290,16 +291,31 @@ try:
 
     # Collection Name
     colNews = db["news"]
-
-    # dailyViews(colNews)
-    # tagsFromAllVideos(colNews) #nicht interessant?
-    # wordsFromTitles(colNews)
-    # uploadsPerDay(colNews)
-    # tagsPerWeekday(colNews)
-    # subscriberPerDate(colNews)
-    # commentsPerDate(colNews)
-    # countCommentsDisabled(colNews)
-    countTitlesChanged(colNews)
+    
+    #youtube account ids
+    bildAcc = "UC4zcMHyrT_xyWlgy5WGpFFQ"
+    zeitAcc = "UC_YnP7DDnKzkkVl3BaHiZoQ"
+    ntvAcc = "UCSeil5V81-mEGB1-VNR7YEA"
+    
+    channelIds = {
+        "BILD": "UC4zcMHyrT_xyWlgy5WGpFFQ",
+        "Zeit Online": "UC_YnP7DDnKzkkVl3BaHiZoQ",
+        "ntv Nachrichten": "UCSeil5V81-mEGB1-VNR7YEA"
+    }
+        
+    for channel in channelIds:
+        #countCommentsDisabled(colNews, channel) #ok
+        #dailyViews(colNews, channel) #ok
+        #tagsFromAllVideos(colNews, channel) #ok
+        print() #dummy
+    # wordsFromTitles(colNews) #weglassen
+    # uploadsPerDay(colNews) #ok
+    # tagsPerWeekday(colNews) #naja
+    # subscriberPerDate(colNews) #weglassen
+    # commentsPerDate(colNews) #naja
+    # countTitlesChanged(colNews) #ok
+    # upload tageszeiten vergleichen #TODO
+    # Transkripte analysieren #TODO
 
 
 except Exception as e:
