@@ -33,7 +33,7 @@ def dailyViews(colNews, channel):
     plt.plot(dateWithViews.keys(), dateWithViews.values())
     plt.xlabel("Datum")
     plt.ylabel("Views")
-    plt.title(channel + " - Anzahl der Gesamtviews pro Tag")
+    plt.title(channel)
     plt.xticks(rotation=90)
     formatter = ticker.ScalarFormatter(useOffset=False)
     formatter.set_scientific(False)
@@ -46,8 +46,8 @@ def tagsFromAllVideos(colNews, channel):
 
     tagsList = []  # List with all tags from every video (only first iteration)
 
-    for x in data:
-        tagsList.append(x["tags"][0]["tags"])
+    for video in data:
+        tagsList.append(video["tags"][0]["tags"])
 
     # put all tags in one single array
     allTags = [tag for sublist in tagsList for tag in sublist]
@@ -63,7 +63,7 @@ def tagsFromAllVideos(colNews, channel):
     plt.bar(tag, count)
     plt.xlabel("Tag")
     plt.ylabel("Anzahl")
-    plt.title(channel + " - Anzahl der Tags in allen Videos")
+    plt.title(channel)
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig("./tagsCount/tagsCount_" + channel + ".pdf")
@@ -85,7 +85,7 @@ def tagsFromAllVideos(colNews, channel):
     plt.bar(tag, count)
     plt.xlabel("Tag")
     plt.ylabel("Anzahl")
-    plt.title(channel + " - Anzahl der Tags in allen Videos")
+    plt.title(channel)
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig("./tagsCount/CleanedTagsCount_" + channel + ".pdf")
@@ -253,7 +253,7 @@ def countCommentsDisabled(colNews, channel):
     
     plotDict = {"Aktiviert":enabledCount, "Deaktiviert":disabledCount}
     plt.figure(figsize=(10, 8))
-    plt.title(channel + " - Anzahl der Videos mit Aktivierten / Deaktivierten Kommentaren")
+    plt.title(channel)
     plt.pie(plotDict.values(), labels=plotDict.keys(), autopct='%1.1f%%')
     plt.savefig("./countCommentsDisabled/countCommentsDisabled_" + channel + ".pdf")
     
@@ -276,6 +276,83 @@ def countTitlesChanged(colNews):
         for key, value in titleChanged.items():
             file.write(key + "  --->>>   " + value + "\n")
 
+def uploadDaytime(colNews, channel):
+    # Get all commentsEnabled array
+    data = colNews.find({"channelId": channelIds[channel]}, {"_id": 0, "createdAt": 1})
+    uploadsPerHour = {}
+    for i in range(24):
+        uploadsPerHour[i] = 0
+    
+    for video in data:
+       uploadHour = int(str(video["createdAt"]).split(" ")[1].split(":")[0])  # split timestamp only save time not date
+       uploadsPerHour[uploadHour] += 1
+    
+        
+    plt.figure(figsize=(10, 8))
+    plt.plot(uploadsPerHour.keys(), uploadsPerHour.values())
+    plt.xlabel("Uhrzeit(Stunde)")
+    plt.ylabel("Anzahl")
+    plt.title(channel)
+    plt.xticks(rotation=90)
+    plt.xticks(list(uploadsPerHour.keys()))
+    plt.savefig("./uploadDaytime/uploadDaytime_" + channel + ".pdf")
+
+def tagsByActivatedComments(colNews):
+    # Get all commentsEnabled array
+    data = colNews.find({}, {"_id": 0, "commentsEnabled": 1, "tags": 1})
+    tagsListEnabled = []  # List with all tags from videos with enabled comments
+    tagsListDisabled = [] # List with all tags from videos with disabled comments
+    for video in data:
+        if video["commentsEnabled"][0]["comments"]:
+            tagsListEnabled.append(video["tags"][0]["tags"])
+        else:
+            tagsListDisabled.append(video["tags"][0]["tags"])
+            
+    # put all tags in single arrays
+    allTagsEnabled = [tag for sublist in tagsListEnabled for tag in sublist]
+    allTagsDisabled = [tag for sublist in tagsListDisabled for tag in sublist]
+    
+    # count each tag occurence
+    tagsCountEnabled = Counter(allTagsEnabled)
+    tagsCountDisabled = Counter(allTagsDisabled)
+    
+    # Cleaned Version without trivial tags
+    trivialTags = ["bild", "bild youtube", "bild reporter", "bild news", "bild aktuell", "bild nachrichten", "bild zeitung",
+                   "bild video", "nachrichten", "nachrichten aktuell", "video", "ntv", "n-tv", "Aktuell", "Nachrichten",
+                   "n-t-v", "TV", "News", "ZEIT ONLINE", "Nachrichten", "News", "ntvNachrichtenGmbH", "Nachrichtenfernsehen",
+                   "Nachrichtensender"]
+    
+    for trivialTag in trivialTags:
+        tagsCountEnabled.__delitem__(trivialTag)
+    
+    for trivialTag in trivialTags:
+        tagsCountDisabled.__delitem__(trivialTag)
+    
+
+    tagsCountEnabledFirst40 = tagsCountEnabled.most_common(40)
+    tagsCountDisabledFirst40 = tagsCountDisabled.most_common(40)
+
+    tag, count = zip(*tagsCountEnabledFirst40)
+
+    plt.figure(figsize=(10, 10))
+    plt.bar(tag, count)
+    plt.xlabel("Tag")
+    plt.ylabel("Anzahl")
+    plt.title("Kommentare aktiviert")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig("./tagsByActivatedComments/Activated.pdf")
+    
+    tag, count = zip(*tagsCountDisabledFirst40)
+    
+    plt.figure(figsize=(10, 10))
+    plt.bar(tag, count)
+    plt.xlabel("Tag")
+    plt.ylabel("Anzahl")
+    plt.title("Kommentare deaktiviert")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig("./tagsByActivatedComments/Deactivated.pdf")
 
 try:
     # Database Client
@@ -303,19 +380,22 @@ try:
         "ntv Nachrichten": "UCSeil5V81-mEGB1-VNR7YEA"
     }
         
+    #single analysis for each channel
     for channel in channelIds:
         #countCommentsDisabled(colNews, channel) #ok
         #dailyViews(colNews, channel) #ok
         #tagsFromAllVideos(colNews, channel) #ok
+        #uploadDaytime(colNews, channel) #ok
         print() #dummy
+    
+    #analysis over all channel
     # wordsFromTitles(colNews) #weglassen
     # uploadsPerDay(colNews) #ok
     # tagsPerWeekday(colNews) #naja
     # subscriberPerDate(colNews) #weglassen
     # commentsPerDate(colNews) #naja
     # countTitlesChanged(colNews) #ok
-    # upload tageszeiten vergleichen #TODO
-    # Transkripte analysieren #TODO
+    tagsByActivatedComments(colNews)
 
 
 except Exception as e:
