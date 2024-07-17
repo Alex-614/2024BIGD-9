@@ -4,7 +4,7 @@ Projekt Repository Gruppe 9 BigData SoSe 2024 TH Bingen
 ## Fields
 ### const
 - url
-- title
+- timestamp
 - channelId
 - createdAt
 ### changing
@@ -16,5 +16,5 @@ Projekt Repository Gruppe 9 BigData SoSe 2024 TH Bingen
 - views
 - likeCount
 - subscribers
-- timestamp
+- title
 - transcript
